@@ -215,7 +215,7 @@ func IsEUI64(ip string) (string, bool) {
     return exploded, true
   }
 
-  return "", false
+  return exploded, false
 }
 
 func GetMACFromEUI64(ip string) (string, error) {
