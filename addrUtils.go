@@ -46,9 +46,9 @@ func (net *IPv6Network) Init(ipStr string) error {
 		fmt.Printf("%b\n", andMask)
 		net.Addr.NetId = addr.NetId & andMask
 	} else {
-		andMask := uint64(math.Pow(2, 64) - 1)
+		andMask := math.Pow(2, 64) - 1
 		fmt.Printf("%b\n", andMask)
-		net.Addr.NetId = addr.NetId & andMask
+		net.Addr.NetId = addr.NetId & uint64(andMask)
 	}
 
 	hostBits := net.Mask - 64
