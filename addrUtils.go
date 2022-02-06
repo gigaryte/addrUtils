@@ -219,7 +219,7 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 	return retAddr, nil
 }
 
-func ipToStr(addr *IPv6Addr) string {
+func IpToStr(addr *IPv6Addr) string {
 	var chunks []string
 	fullAddr := fmt.Sprintf("%016x%016x", addr.NetId, addr.HostId)
 	runes := []rune(fullAddr)
