@@ -2,6 +2,7 @@ package addrUtils
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -30,15 +31,29 @@ func (net *IPv6Network) Init(ipStr string) error {
 		return err
 	}
 
-	net.Addr.NetId = addr.NetId
-	net.Addr.HostId = addr.HostId
-
 	mask, err := strconv.ParseUint(s[1], 10, 8)
 	if err != nil {
 		return err
 	}
 
 	net.Mask = uint8(mask)
+
+	//Bitwise and the mask bits with the address provided
+	if net.Mask < 64 {
+		net.Addr.NetId = addr.NetId & (uint64((math.Pow(2, float64(net.Mask)) - 1)) << (64 - uint64(net.Mask)))
+	} else {
+		net.Addr.NetId = addr.NetId & uint64((math.Pow(2, 64))-1)
+	}
+
+	hostBits := net.Mask - 64
+
+	if hostBits < 64 {
+		net.Addr.HostId = addr.HostId & (uint64((math.Pow(2, float64(hostBits)) - 1)) << (64 - uint64(hostBits)))
+	} else {
+		net.Addr.HostId = addr.HostId & uint64((math.Pow(2, 64))-1)
+	}
+
+	fmt.Println(ipToStr(&net.Addr))
 
 	return nil
 }
