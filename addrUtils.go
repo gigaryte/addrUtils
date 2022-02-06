@@ -43,20 +43,19 @@ func (net *IPv6Network) Init(ipStr string) error {
 	//Bitwise and the mask bits with the address provided
 	if net.Mask < 64 {
 		andMask := uint64((math.Pow(2, float64(net.Mask)) - 1)) << (64 - uint64(net.Mask))
-		fmt.Printf("%b\n", andMask)
 		net.Addr.NetId = addr.NetId & andMask
 	} else {
-		andMask := math.Pow(2, 64) - 1
-		fmt.Printf("%b\n", andMask)
-		net.Addr.NetId = addr.NetId & uint64(andMask)
+		net.Addr.NetId = addr.NetId
 	}
 
 	hostBits := net.Mask - 64
 
 	if hostBits < 64 {
-		net.Addr.HostId = addr.HostId & (uint64((math.Pow(2, float64(hostBits)) - 1)) << (64 - uint64(hostBits)))
+		andMask := uint64((math.Pow(2, float64(hostBits)) - 1)) << (64 - uint64(hostBits))
+		fmt.Printf("%b\n", andMask)
+		net.Addr.HostId = addr.HostId & andMask
 	} else {
-		net.Addr.HostId = addr.HostId & uint64((math.Pow(2, 64))-1)
+		net.Addr.HostId = addr.HostId
 	}
 
 	fmt.Println(ipToStr(&net.Addr))
