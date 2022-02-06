@@ -8,8 +8,39 @@ import (
 
 //IPv6Addr stores the upper and lower halves of an IPv6 address
 type IPv6Addr struct {
-	netId  uint64 // upper 64 bits
-	hostId uint64 // lower 64 bits
+	NetId  uint64 // upper 64 bits
+	HostId uint64 // lower 64 bits
+}
+
+//IPv6Network holds the base address of an IPv6 network and the netmask
+type IPv6Network struct {
+	Addr IPv6Addr
+	Mask uint8
+}
+
+func (net *IPv6Network) Init(ipStr string) error {
+
+	s := strings.Split(ipStr, "/")
+	if len(s) != 2 {
+		return fmt.Errorf("argument must be of the form address/netmask")
+	}
+
+	addr, err := ipIntFromString(s[0])
+	if err != nil {
+		return err
+	}
+
+	net.Addr.NetId = addr.NetId
+	net.Addr.HostId = addr.HostId
+
+	mask, err := strconv.ParseUint(s[1], 10, 8)
+	if err != nil {
+		return err
+	}
+
+	net.Mask = uint8(mask)
+
+	return nil
 }
 
 func ipIntFromString(s string) (*IPv6Addr, error) {
@@ -125,11 +156,11 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 		}
 
 		if doingHigh {
-			retAddr.netId <<= 16
-			retAddr.netId |= val
+			retAddr.NetId <<= 16
+			retAddr.NetId |= val
 		} else {
-			retAddr.hostId <<= 16
-			retAddr.hostId |= val
+			retAddr.HostId <<= 16
+			retAddr.HostId |= val
 		}
 	}
 
@@ -142,9 +173,9 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 		}
 
 		if doingHigh {
-			retAddr.netId <<= 16
+			retAddr.NetId <<= 16
 		} else {
-			retAddr.hostId <<= 16
+			retAddr.HostId <<= 16
 		}
 	}
 
@@ -162,11 +193,11 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 		}
 
 		if doingHigh {
-			retAddr.netId <<= 16
-			retAddr.netId |= val
+			retAddr.NetId <<= 16
+			retAddr.NetId |= val
 		} else {
-			retAddr.hostId <<= 16
-			retAddr.hostId |= val
+			retAddr.HostId <<= 16
+			retAddr.HostId |= val
 		}
 	}
 
@@ -175,7 +206,7 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 
 func ipToStr(addr *IPv6Addr) string {
 	var chunks []string
-	fullAddr := fmt.Sprintf("%016x%016x", addr.netId, addr.hostId)
+	fullAddr := fmt.Sprintf("%016x%016x", addr.NetId, addr.HostId)
 	runes := []rune(fullAddr)
 
 	for i := 0; i < len(runes); i += 4 {
