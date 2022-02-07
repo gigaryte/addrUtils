@@ -3,8 +3,10 @@ package addrUtils
 import (
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"strings"
+	"time"
 )
 
 //IPv6Addr stores the upper and lower halves of an IPv6 address
@@ -15,10 +17,13 @@ type IPv6Addr struct {
 
 //IPv6Network holds the base address of an IPv6 network and the netmask
 type IPv6Network struct {
-	Addr IPv6Addr
-	Mask uint8
+	Addr    IPv6Addr //Network (base) address
+	Mask    uint8    //Network mask
+	Current IPv6Addr //Address we're currently on if we're using random
+	//addresses
 }
 
+//Parses and initializes an IPv6Network struct from a string network
 func (net *IPv6Network) Init(ipStr string) error {
 
 	s := strings.Split(ipStr, "/")
@@ -38,9 +43,9 @@ func (net *IPv6Network) Init(ipStr string) error {
 
 	net.Mask = uint8(mask)
 
-    if net.Mask > 128 {
-        return fmt.Errorf("netmask cannot be > 128")
-    }
+	if net.Mask > 128 {
+		return fmt.Errorf("netmask cannot be > 128")
+	}
 
 	//Bitwise and the mask bits with the address provided
 	if net.Mask < 64 {
@@ -62,6 +67,34 @@ func (net *IPv6Network) Init(ipStr string) error {
 	return nil
 }
 
+//net.Randomize chooses a random start address in the network
+func (net *IPv6Network) Randomize() error {
+
+	if net.Mask < 64 {
+		return fmt.Errorf("Randomize() not supported for networks bigger than /64")
+	}
+
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
+
+	min := net.Addr.NetId
+	max := min + uint64(math.Pow(2, float64(net.Mask))) - 1
+
+	randHostId := uint64(r1.Intn(int(max-min+1))) + min
+
+	net.Current.NetId = net.Addr.NetId
+	net.Current.HostId = randHostId
+
+	fmt.Println(IpToStr(&net.Current))
+
+	return nil
+}
+
+//net.Next() gets the next address up from the base address
+func (net *IPv6Network) Next(ipStr string) error {
+	return nil
+}
+
 func ipIntFromString(s string) (*IPv6Addr, error) {
 	hextetCount := 8
 	retAddr := new(IPv6Addr)
@@ -74,7 +107,7 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 
 	minPartsLen := 3
 	if len(parts) < minPartsLen {
-		return retAddr, fmt.Errorf("At least %d parts expected in %s", minPartsLen, s)
+		return retAddr, fmt.Errorf("at least %d parts expected in %s", minPartsLen, s)
 	}
 
 	if strings.Contains(parts[len(parts)-1], ".") {
@@ -94,7 +127,7 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 		for i := 0; i < 4; i++ {
 			n, err := strconv.ParseUint(v4Slice[i], 10, 8)
 			if err != nil {
-				return retAddr, fmt.Errorf("Error parsing IPv4 embedded address")
+				return retAddr, fmt.Errorf("error parsing IPv4 embedded address")
 			}
 			newPart += fmt.Sprintf("%02x", n)
 		}
@@ -107,14 +140,14 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 	//An IPv6 Address can have at most 9 colons
 	maxPartsLen := 9
 	if len(parts) > maxPartsLen {
-		return retAddr, fmt.Errorf("At most %d colons permitted in %s", maxPartsLen-1, s)
+		return retAddr, fmt.Errorf("at most %d colons permitted in %s", maxPartsLen-1, s)
 	}
 
 	//Find a :: with nothing in between
 	skip_idx := -1
 	for i := 1; i < (len(parts) - 1); i++ {
 		if parts[i] == "" && skip_idx >= 0 {
-			return retAddr, fmt.Errorf("At most one :: permitted in %s", s)
+			return retAddr, fmt.Errorf("at most one :: permitted in %s", s)
 		} else if parts[i] == "" {
 			skip_idx = i
 		}
@@ -130,13 +163,13 @@ func ipIntFromString(s string) (*IPv6Addr, error) {
 		if parts[0] == "" {
 			parts_hi--
 			if parts_hi > 0 {
-				return retAddr, fmt.Errorf("Leading ':' only permitted as part of :: in %s", s)
+				return retAddr, fmt.Errorf("leading ':' only permitted as part of :: in %s", s)
 			}
 		}
 		if parts[len(parts)-1] == "" {
 			parts_lo--
 			if parts_lo > 0 {
-				return retAddr, fmt.Errorf("Trailing ':' only permitted as part of :: in %s", s)
+				return retAddr, fmt.Errorf("trailing ':' only permitted as part of :: in %s", s)
 			}
 		}
 		parts_skipped = hextetCount - (parts_hi + parts_lo)
