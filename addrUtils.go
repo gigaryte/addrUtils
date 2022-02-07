@@ -38,6 +38,10 @@ func (net *IPv6Network) Init(ipStr string) error {
 
 	net.Mask = uint8(mask)
 
+    if net.Mask > 128 {
+        return fmt.Errorf("netmask cannot be > 128")
+    }
+
 	//Bitwise and the mask bits with the address provided
 	if net.Mask < 64 {
 		andMask := uint64((math.Pow(2, float64(net.Mask)) - 1)) << (64 - uint64(net.Mask))
