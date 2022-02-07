@@ -78,17 +78,13 @@ func (net *IPv6Network) Randomize() error {
 	r1 := rand.New(s1)
 
 	net.Current.NetId = net.Addr.NetId
-	var randHostId uint64
-	if net.Mask == 64 {
-		randHostId = r1.Uint64()
-	} else {
-		min := int(net.Addr.HostId)
-		pow := int(math.Pow(2, float64(128-net.Mask)))
-		max := min + pow - 1
-		randHostId = uint64(r1.Intn(max-min+1) + min)
-	}
 
-	net.Current.HostId = randHostId
+	randHostId := r1.Uint64()
+	hostBits := 128 - net.Mask
+
+	andMask := uint64((math.Pow(2, float64(hostBits)) - 1)) << (64 - uint64(hostBits))
+
+	net.Current.HostId = randHostId & andMask
 
 	return nil
 }
