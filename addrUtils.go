@@ -83,7 +83,7 @@ func (net *IPv6Network) Randomize() error {
 	hostBits := net.Mask - 64
 	fmt.Println("Hostbits: ", hostBits)
 
-	pow := math.Pow(2, float64(hostBits))
+	pow := math.Pow(2, float64(hostBits)) - 1
 	//andMask := uint64((math.Pow(2, float64(hostBits)) - 1)) << (64 - uint64(hostBits))
 	fmt.Println("Power", pow)
 	andMask := uint64(pow) << (64 - hostBits)
