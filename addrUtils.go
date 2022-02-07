@@ -21,6 +21,7 @@ type IPv6Network struct {
 	Mask    uint8    //Network mask
 	Current IPv6Addr //Address we're currently on if we're using random
 	//addresses
+	MaxHost uint64 //Maximum value host bits can be
 }
 
 //Parses and initializes an IPv6Network struct from a string network
@@ -64,6 +65,9 @@ func (net *IPv6Network) Init(ipStr string) error {
 		net.Addr.HostId = addr.HostId
 	}
 
+	maxBits := 128 - net.Mask
+	net.MaxHost = uint64(math.Pow(2, float64(maxBits))-1) + net.Addr.HostId
+
 	return nil
 }
 
@@ -94,7 +98,14 @@ func (net *IPv6Network) Randomize() error {
 }
 
 //net.Next() gets the next address up from the base address
-func (net *IPv6Network) Next(ipStr string) error {
+func (net *IPv6Network) Next() error {
+
+	net.Current.HostId++
+
+	if net.Current.HostId == net.MaxHost {
+		net.Current.HostId = net.Addr.HostId //wrap around
+	}
+
 	return nil
 }
 
