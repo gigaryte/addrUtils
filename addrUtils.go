@@ -247,7 +247,7 @@ func Explode(s string) (string, error) {
 		return "", fmt.Errorf("ipIntFromString: %s", err)
 	}
 
-	return ipToStr(addr), nil
+	return IpToStr(addr), nil
 }
 
 //IsEUI64 explodes a string-representation of an IPV6 address (e.g. "2001::1"),
