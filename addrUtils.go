@@ -80,13 +80,11 @@ func (net *IPv6Network) Randomize() error {
 	net.Current.NetId = net.Addr.NetId
 
 	randHostId := r1.Uint64()
-	hostBits := net.Mask - 64
+	hostBits := 128 - net.Mask
 	fmt.Println("Hostbits: ", hostBits)
 
-	pow := math.Pow(2, float64(hostBits)) - 1
+	andMask := uint64(math.Pow(2, float64(hostBits)) - 1)
 	//andMask := uint64((math.Pow(2, float64(hostBits)) - 1)) << (64 - uint64(hostBits))
-	fmt.Println("Power", pow)
-	andMask := uint64(pow) << (64 - hostBits)
 
 	fmt.Printf("andmask: %064b\n", andMask)
 	fmt.Printf("^andmask: %064b\n", ^andMask)
