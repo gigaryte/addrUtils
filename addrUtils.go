@@ -78,9 +78,10 @@ func (net *IPv6Network) Randomize() error {
 	r1 := rand.New(s1)
 
 	min := int(net.Addr.NetId)
-	max := min + int(math.Pow(2, float64(net.Mask))) - 1
+	pow := int(math.Pow(2, float64(128-net.Mask)))
+	max := min + pow - 1
 
-	fmt.Println(min, max)
+	fmt.Println(min, pow, max)
 
 	randHostId := uint64(r1.Intn(max-min+1) + min)
 
